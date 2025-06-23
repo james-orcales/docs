@@ -46,6 +46,7 @@ This document consolidates best practices from four key sources, with a focus so
       + [Use an action instead of inline scripts](#use-an-action-instead-of-inline-scripts)
       + [✨ Use an intermediate environment variable  ](#-use-an-intermediate-environment-variable)
       + [✨ Global Helper Functions Hack](#-global-helper-functions-hack)
+      + [✨ Inline Insertions and GitHub Expression Defaults](#-inline-insertions-and-github-expression-defaults)
 
 ## ✨ Template
 
@@ -519,4 +520,24 @@ env:
 
 ```
 
+### ✨ Inline Insertions and GitHub Expression Defaults
 
+Generally, inline insertions should be placed inside `run` blocks. This ensures that environment variables are resolved correctly at runtime:
+
+```yaml
+env:
+  foo: 'barbaz'
+run: |
+  do_something "${foo:?💥}"
+```
+
+However, when using **GitHub Actions `uses:` steps**, you cannot interpolate shell variables. In these cases, use GitHub expressions instead, and default to the 💥 emoji as a visual indicator of a missing or unset value:
+
+```yaml
+name: Do something
+uses: Something/something@v1
+with:
+  foo: ${{ secrets.MY_SECRET || '💥' }}
+```
+
+This approach helps catch missing configuration early and keeps failure signals consistent across contexts.
