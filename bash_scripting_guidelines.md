@@ -65,7 +65,7 @@ function println() {
   if [ "$#" -gt 0 ]; then
     printf "$@"
   fi
-  printf 'n'
+  printf '\n'
 }
 function warn() {  
   println "⚠️ WARN: $@" >&2  
@@ -76,7 +76,7 @@ function err() {
   return 1
 }
 function ignore_failure() {
-  "$@" || warn "⚠️ ignored failure: $*n"
+  "$@" || warn "⚠️ ignored failure: $*\n"
   return 0
 }
 EOF
@@ -485,7 +485,7 @@ env:
       if [ "$#" -gt 0 ]; then  
         printf "$@"  
       fi  
-      printf 'n'  
+      printf '\n'  
     }
 
     function warn() {  
@@ -499,7 +499,7 @@ env:
     }
 
     function ignore_failure() {  
-      "$@" || warn "⚠️ ignored failure: $*n"  
+      "$@" || warn "⚠️ ignored failure: $*\n"  
       return 0  
     }
 
