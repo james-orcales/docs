@@ -2,7 +2,7 @@
 
 This document consolidates best practices from four key sources, with a focus solely on **writing reliable and safe Bash scripts**. It does not prescribe a full style guide—you're encouraged to adopt your own formatting preferences. However, any rules or recommendations stated here **override those in the original sources** where conflicts arise. 
 
-*Sections marked with ✨ reflect original insight or deliberate divergence from the referenced guidelines.*
+*Sections marked with 💡 reflect original insight or deliberate divergence from the referenced guidelines.*
 
 ## Resources
 
@@ -15,40 +15,40 @@ This document consolidates best practices from four key sources, with a focus so
 
 - [Bash Scripting Best Practices](#bash-scripting-best-practices)
    * [Resources](#resources)
-   * [✨ Template](#-template)
+   * [💡 Template](#-template)
 - [Security Guidelines](#security-guidelines)
-   * [✨ Bash Setup](#-bash-setup)
+   * [💡 Bash Setup](#-bash-setup)
    * [SUID/SGID](#suidsgid)
    * [Error Messages](#error-messages)
    * [Comments](#comments)
-      + [✨ Function Doc Comments](#-function-doc-comments)
+      + [💡 Function Doc Comments](#-function-doc-comments)
    * [Formatting](#formatting)
-      + [✨ Indentation and Line Length](#-indentation-and-line-length)
-      + [✨ Variable Expansion and Command Substitution](#-variable-expansion-and-command-substitution)
+      + [💡 Indentation and Line Length](#-indentation-and-line-length)
+      + [💡 Variable Expansion and Command Substitution](#-variable-expansion-and-command-substitution)
    * [Features and Bugs](#features-and-bugs)
       + [ShellCheck](#shellcheck)
-      + [✨ Test, `[ … ]`, and `[[ … ]]`](#-test-and-)
+      + [💡 Test, `[ … ]`, and `[[ … ]]`](#-test-and-)
       + [Testing Strings](#testing-strings)
       + [Wildcard Expansion of Filenames](#wildcard-expansion-of-filenames)
-      + [✨ Eval](#-eval)
+      + [💡 Eval](#-eval)
       + [Arrays](#arrays)
       + [Pipes to While](#pipes-to-while)
       + [Arithmetic](#arithmetic)
       + [Aliases](#aliases)
    * [Naming Conventions](#naming-conventions)
-      + [✨ Variables Names](#-variables-names)
-      + [✨ Declare, Readonly, and Local Variables](#-declare-readonly-and-local-variables)
+      + [💡 Variables Names](#-variables-names)
+      + [💡 Declare, Readonly, and Local Variables](#-declare-readonly-and-local-variables)
    * [Calling Commands](#calling-commands)
       + [Builtin Commands vs. External Commands {#builtin-commands-vs.-external-commands}](#builtin-commands-vs-external-commands-builtin-commands-vs-external-commands)
       + [How to end a bash script](#how-to-end-a-bash-script)
 - [Github Actions](#github-actions)
    * [Mitigating Script Injection in GitHub Actions](#mitigating-script-injection-in-github-actions)
       + [Use an action instead of inline scripts](#use-an-action-instead-of-inline-scripts)
-      + [✨ Use an intermediate environment variable  ](#-use-an-intermediate-environment-variable)
-      + [✨ Global Helper Functions Hack](#-global-helper-functions-hack)
-      + [✨ Inline Insertions and GitHub Expression Defaults](#-inline-insertions-and-github-expression-defaults)
+      + [💡 Use an intermediate environment variable  ](#-use-an-intermediate-environment-variable)
+      + [💡 Global Helper Functions Hack](#-global-helper-functions-hack)
+      + [💡 Inline Insertions and GitHub Expression Defaults](#-inline-insertions-and-github-expression-defaults)
 
-## ✨ Template
+## 💡 Template
 
 ```bash  
 .bashrc
@@ -88,7 +88,7 @@ eval “$__bash_setup__”
 
 # Security Guidelines
 
-## ✨ Bash Setup
+## 💡 Bash Setup
 
 Use the latest version of bash available.  
 
@@ -97,7 +97,7 @@ Use the latest version of bash available.
 
 Use this shebang to invoke Bash reliably: `#!/usr/bin/env bash`
 
-✨ Set your shell environment explicitly at the top of every script:
+💡 Set your shell environment explicitly at the top of every script:
 
 ```bash  
 set +eu  
@@ -105,7 +105,7 @@ set -o pipefail
 shopt -s nullglob globstar extglob  
 ```
 
-* **✨ Disable `errexit` (+e)**:  
+* **💡 Disable `errexit` (+e)**:  
    `set -e` is too unreliable — it silently fails in common cases like:  
 * Inside `if` or `while`  
 * In pipelines (`cmd1 | cmd2`)  
@@ -113,8 +113,8 @@ shopt -s nullglob globstar extglob
 
 Disabling it encourages **explicit and intentional error handling**.
 
-* **✨ Disable `nounset` (+u)**:  
-   Treat unset and empty variables the same. Makes scripts less brittle and easier to write defaults for. Refer to [Function Doc Comments](#✨-function-doc-comments)  
+* **💡 Disable `nounset` (+u)**:  
+   Treat unset and empty variables the same. Makes scripts less brittle and easier to write defaults for. Refer to [Function Doc Comments](#💡-function-doc-comments)  
 * **Enable `pipefail`**:  
    Ensures pipeline failures aren't silently ignored. The pipeline fails if any command fails — not just the last.  
     
@@ -186,9 +186,9 @@ All error messages should go to `STDERR`. This makes it easier to separate norma
 
 ## Comments
 
-### ✨ Function Doc Comments
+### 💡 Function Doc Comments
 
-**✨ Code is truth** — not comments. Unlike doc comments, which can drift or lie, **assertions and defaults are always enforced** at runtime. Make your functions self-documenting by validating inputs and environment variables directly in code.
+**💡 Code is truth** — not comments. Unlike doc comments, which can drift or lie, **assertions and defaults are always enforced** at runtime. Make your functions self-documenting by validating inputs and environment variables directly in code.
 
 ```bash
 
@@ -222,29 +222,29 @@ All error messages should go to `STDERR`. This makes it easier to separate norma
 
 ## Formatting
 
-### ✨ Indentation and Line Length
+### 💡 Indentation and Line Length
 
-**✨ Use 2 spaces for indentation — never tabs.** This ensures code looks consistent and predictable across all editors. If someone uses 8-space tabs and you open their script in a 2-space environment, it’ll appear barely indented. Likewise, your neatly indented code might look sparse in theirs. Standardizing on spaces (specifically 2) ensures structure is preserved, regardless of editor settings.
+**💡 Use 2 spaces for indentation — never tabs.** This ensures code looks consistent and predictable across all editors. If someone uses 8-space tabs and you open their script in a 2-space environment, it’ll appear barely indented. Likewise, your neatly indented code might look sparse in theirs. Standardizing on spaces (specifically 2) ensures structure is preserved, regardless of editor settings.
 
-✨ This is **especially important in indentation-sensitive scripting languages** like Bash, where misaligned blocks can introduce subtle, hard-to-detect logic errors.
+💡 This is **especially important in indentation-sensitive scripting languages** like Bash, where misaligned blocks can introduce subtle, hard-to-detect logic errors.
 
-**✨ Stick to a soft line length limit of 120 characters** to keep lines readable without excessive wrapping.
+**💡 Stick to a soft line length limit of 120 characters** to keep lines readable without excessive wrapping.
 
 **Exception**: The only valid use of tabs is for indenting the body of `<<-` here-documents.
 
 [https://google.github.io/styleguide/shellguide.html#s5.1-indentation](https://google.github.io/styleguide/shellguide.html#s5.1-indentation)  
 [https://google.github.io/styleguide/shellguide.html#s5.2-line-length-and-long-strings](https://google.github.io/styleguide/shellguide.html#s5.2-line-length-and-long-strings)
 
-### ✨ Variable Expansion and Command Substitution
+### 💡 Variable Expansion and Command Substitution
 
 **Always quote** variables and command substitutions. Never use backticks.
 
-✨ For variables, either assert their presence or provide a fallback:
+💡 For variables, either assert their presence or provide a fallback:
 
 * Use an inline assertion like `${foo:?💥}` to fail fast. Include a 🔥 or 💥 emoji to make errors pop in CI logs.  
 * Use a fallback like `${foo:-'ARBITRARY'}` to signal that an empty or default value is acceptable.
 
-✨ Sprinkling inline assertions (especially in GitHub Actions where env variables are overused) creates airtight null checks, forcing you to decide between failing loudly or handling defaults gracefully. As a result, unguarded expansions like `$foo` or `${foo}` become a clear code smell — they convey neither intent nor safety.
+💡 Sprinkling inline assertions (especially in GitHub Actions where env variables are overused) creates airtight null checks, forcing you to decide between failing loudly or handling defaults gracefully. As a result, unguarded expansions like `$foo` or `${foo}` become a clear code smell — they convey neither intent nor safety.
 
 [https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#the-first-thing-to-know-about-bash-coding](https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#the-first-thing-to-know-about-bash-coding)  
 [https://google.github.io/styleguide/shellguide.html#s5.6-variable-expansion](https://google.github.io/styleguide/shellguide.html#s5.6-variable-expansion)  
@@ -258,15 +258,15 @@ The [ShellCheck project](https://www.shellcheck.net/) identifies common bugs and
 
 [https://google.github.io/styleguide/shellguide.html#s6.1-shellcheck](https://google.github.io/styleguide/shellguide.html#s6.1-shellcheck)
 
-### ✨ Test, `[ … ]`, and `[[ … ]]`
+### 💡 Test, `[ … ]`, and `[[ … ]]`
 
 Prefer single-bracket conditionals for if statements. Everywhere else, use `test`. 
 
 Double-bracket conditions have more features. But they have good POSIX substitutes for the most part:
 
-- **Pattern matching ([[ $path == *.png || $path == *.gif ]]):** This is what `case` is for. ✨ But there are some patterns that are more straightforward to express in regex so do what’s best for your use case.  
+- **Pattern matching ([[ $path == *.png || $path == *.gif ]]):** This is what `case` is for. 💡 But there are some patterns that are more straightforward to express in regex so do what’s best for your use case.  
 - **Logical operators:** The usual suspects && and || work just fine – outside commands – and can be grouped with group commands: `if { true || false; } && true; then echo 1; else echo 0; fi`.  
-- **Checking if a variable exists** `[[ -v varname ]]`: This is one of the good uses of double bracket conditions, ✨ but our `”${foo:-💥}”` is a good alternative here.
+- **Checking if a variable exists** `[[ -v varname ]]`: This is one of the good uses of double bracket conditions, 💡 but our `”${foo:-💥}”` is a good alternative here.
 
 [https://google.github.io/styleguide/shellguide.html#s6.3-tests](https://google.github.io/styleguide/shellguide.html#s6.3-tests)  
 [https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#should-i-use-double-bracket-conditions](https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#should-i-use-double-bracket-conditions)
@@ -320,7 +320,7 @@ removed ./somefile'
 ```  
 [https://google.github.io/styleguide/shellguide.html#s6.5-wildcard-expansion-of-filenames](https://google.github.io/styleguide/shellguide.html#s6.5-wildcard-expansion-of-filenames)
 
-### ✨ Eval
+### 💡 Eval
 
 Google prohibits this but as long as you follow this style guide, it shouldn’t be an issue. For most cases, there’s always a simpler and usually more verbose alternative to `eval`. One special case where eval is highly valuable is setting up a bash environment such as the `shopt` and helper functions that help enforce this style guide. In Github Actions, you set a multiline env variable containing a bash script and then all run blocks simply have to do `eval “$__bash_setup__”`. 
 
@@ -355,21 +355,21 @@ For almost every purpose, shell functions are preferred over aliases.
 
 ## Naming Conventions
 
-### ✨ Variables Names
+### 💡 Variables Names
 
 **Environment and exported variables** must use `SCREAMING_SNAKE_CASE`. Everything else must be `snake_case`. This helps separate script variables from `SYSTEM_ENV_VARIABLE` that actually affect the behavior of an external application.
 
 [https://google.github.io/styleguide/shellguide.html#s7-naming-conventions](https://google.github.io/styleguide/shellguide.html#s7-naming-conventions)
 
-✨ Source Filenames
+💡 Source Filenames
 
-Lowercase, with underscores to separate words. ✨ Whitespaces are prohibited.
+Lowercase, with underscores to separate words. 💡 Whitespaces are prohibited.
 
 [https://google.github.io/styleguide/shellguide.html#s7.4-source-filenames](https://google.github.io/styleguide/shellguide.html#s7.4-source-filenames)
 
-### ✨ Declare, Readonly, and Local Variables
+### 💡 Declare, Readonly, and Local Variables
 
-`✨ readonly` and `declare` are prohibited. This style favors clarity and flexibility over immutability paranoia. 
+`💡 readonly` and `declare` are prohibited. This style favors clarity and flexibility over immutability paranoia. 
 
 Declare function-specific variables with `local`. This avoids polluting the global namespace and inadvertently setting variables that may have significance outside the function.
 
@@ -444,7 +444,7 @@ with:
 ```
 https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions?learn=getting_started&learnProduct=actions#using-an-action-instead-of-an-inline-script-recommended
 
-### ✨ Use an intermediate environment variable  
+### 💡 Use an intermediate environment variable  
 
 ```yaml
 env:
@@ -460,11 +460,11 @@ run: |
 
 2. Keeps the value in memory, not embedded in the script
 
-3. ✨ Use `snake_case` unless it’s sensitive data or an environment variable that affects an external command. In the latter’s case, use `SCREAMING_SNAKE_CASE.`
+3. 💡 Use `snake_case` unless it’s sensitive data or an environment variable that affects an external command. In the latter’s case, use `SCREAMING_SNAKE_CASE.`
 
 https://docs.github.com/en/actions/security-for-github-actions/security-guides/security-hardening-for-github-actions?learn=getting_started&learnProduct=actions#using-an-intermediate-environment-variable
 
-### ✨ Global Helper Functions Hack
+### 💡 Global Helper Functions Hack
 
 This pattern enables defining and injecting reusable Bash functions into multiple script steps in CI/CD workflows (e.g., GitHub Actions, GitLab CI, etc.).
 
@@ -520,7 +520,7 @@ env:
 
 ```
 
-### ✨ Inline Insertions and GitHub Expression Defaults
+### 💡 Inline Insertions and GitHub Expression Defaults
 
 Generally, inline insertions should be placed inside `run` blocks. This ensures that environment variables are resolved correctly at runtime:
 
