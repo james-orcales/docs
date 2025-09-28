@@ -1,6 +1,8 @@
 # Bash Scripting Best Practices
 
-This document consolidates best practices from four key sources, with a focus solely on **writing reliable and safe Bash scripts**. It does not prescribe a full style guide—you're encouraged to adopt your own formatting preferences. However, any rules or recommendations stated here **override those in the original sources** where conflicts arise. 
+This document consolidates best practices from four key sources, with a focus solely on **writing reliable and safe Bash scripts**. It does not prescribe a full
+style guide—you're encouraged to adopt your own formatting preferences. However, any rules or recommendations stated here **override those in the original
+sources** where conflicts arise. 
 
 *Sections marked with 💡 reflect original insight or deliberate divergence from the referenced guidelines.*
 
@@ -57,27 +59,27 @@ This document consolidates best practices from four key sources, with a focus so
 
 # WARNING: do not eval this in .bashrc itself
 export __bash_setup__=$(
-  cat <<EOF
-set +e
-set -uo pipefail
+        cat <<'EOF'
+set +eu
+set o pipefail
 shopt -s nullglob globstar extglob
 function println() {
-  if [ "$#" -gt 0 ]; then
-    printf "$@"
-  fi
-  printf '\n'
+        if test "$#" -gt 0; then
+                printf "$@"
+        fi
+        printf '\n'
 }
-function warn() {  
-  println "⚠️ WARN: $@" >&2  
-  return 0  
+function warn() {        
+        println "⚠️ WARN: $@" >&2        
+        return 0        
 }
 function err() {
-  println “ERROR: ❌ $@" >&2
-  return 1
+        println “ERROR: ❌ $@" >&2
+        return 1
 }
 function ignore_failure() {
-  "$@" || warn "⚠️ ignored failure: $*\n"
-  return 0
+        "$@" || warn "⚠️ ignored failure: $*\n"
+        return 0
 }
 EOF
 )
@@ -93,7 +95,8 @@ eval “$__bash_setup__”
 Use the latest version of bash available.  
 
 - On Windows, enable [WSL2](https://learn.microsoft.com/en-us/windows/wsl/) and use Bash from a proper Linux distro.  
-- On macOS, be cautious: many GNU utilities have subtle differences on Darwin vs Linux (e.g., `sed -E`). See [Builtin Commands vs External Commands.](#builtin-commands-vs.-external-commands)
+- On macOS, be cautious: many GNU utilities have subtle differences on Darwin vs Linux (e.g., `sed -E`). See [Builtin Commands vs External
+  Commands.](#builtin-commands-vs.-external-commands)
 
 Use this shebang to invoke Bash reliably: `#!/usr/bin/env bash`
 
@@ -114,32 +117,33 @@ shopt -s nullglob globstar extglob
 Disabling it encourages **explicit and intentional error handling**.
 
 * **💡 Disable `nounset` (+u)**:  
-   Treat unset and empty variables the same. Makes scripts less brittle and easier to write defaults for. Refer to [Function Doc Comments](#💡-function-doc-comments)  
+   Treat unset and empty variables the same. Makes scripts less brittle and easier to write defaults for. 
+   Refer to [Function Doc Comments](#💡-function-doc-comments)  
 * **Enable `pipefail`**:  
    Ensures pipeline failures aren't silently ignored. The pipeline fails if any command fails — not just the last.  
     
-  ```bash  
-  if ! aws ecs do_something --json | jq '{ .[:-5] | .some_typo }' | tee foobar.log; then  
-    # This fails if any command in the pipeline fails, thanks to pipefail.  
-    # But ideally, each command’s failure should be checked and handled explicitly.  
-    err "Failed to query ECS information"  
-    exit 1  
-  fi  
-    
-  # Instead of relying on `pipefail` to catch any error in the pipeline,  
-  # handle each command’s failure explicitly. This provides better control and clearer error messages.  
-  json=”$(aws ecs do_something --json) || {  
-    err "AWS call failed"  
-    exit 1  
-  })”  
-    
-  filtered=”$(jq '{ .[:-5] | .some_typo }' <<< "$json") || {  
-    err "jq failed"  
-    exit 1  
-  })”  
-    
-  println "$filtered" | tee foobar.log  
-  ```  
+```bash  
+if ! aws ecs do_something --json | jq '{ .[:-5] | .some_typo }' | tee foobar.log; then        
+        # This fails if any command in the pipeline fails, thanks to pipefail.        
+        # But ideally, each command’s failure should be checked and handled explicitly.        
+        err "Failed to query ECS information"        
+        exit 1        
+fi        
+        
+# Instead of relying on `pipefail` to catch any error in the pipeline,        
+# handle each command’s failure explicitly. This provides better control and clearer error messages.        
+json=”$(aws ecs do_something --json) || {        
+        err "AWS call failed"        
+        exit 1        
+})”        
+        
+filtered=”$(jq '{ .[:-5] | .some_typo }' <<< "$json") || {        
+        err "jq failed"        
+        exit 1        
+})”        
+        
+println "$filtered" | tee foobar.log        
+```  
 * **Enable `nullglob`, `globstar`, `extglob`**
 
   * `nullglob`: globs expand to nothing instead of themselves when no matches are found.
@@ -152,7 +156,8 @@ Disabling it encourages **explicit and intentional error handling**.
 
 SUID and SGID are *forbidden* on shell scripts.
 
-There are too many security issues with shell that make it nearly impossible to secure sufficiently to allow SUID/SGID. While bash does make it difficult to run SUID, it’s still possible on some platforms which is why we’re being explicit about banning it.
+There are too many security issues with shell that make it nearly impossible to secure sufficiently to allow SUID/SGID. While bash does make it difficult to run
+SUID, it’s still possible on some platforms which is why we’re being explicit about banning it.
 
 Use `sudo` to provide elevated access if you need it.
 
@@ -163,22 +168,21 @@ Use `sudo` to provide elevated access if you need it.
 All error messages should go to `STDERR`. This makes it easier to separate normal status from actual issues.
 
 ```bash
+function err() {
 
-`function err() {`
+        println "ERROR: ❌ $*" >&2
 
-  `println "ERROR: ❌ $*" >&2`
+        return 1
 
-  `return 1`
+}
 
-`}`
+if ! do_something; then
 
-`if ! do_something; then`
+        err "i’m warning you"
 
-  `err "i’m warning you"`
+        exit 1
 
-  `exit 1`
-
-`fi`
+fi
 
 ```
 
@@ -188,34 +192,30 @@ All error messages should go to `STDERR`. This makes it easier to separate norma
 
 ### 💡 Function Doc Comments
 
-**💡 Code is truth** — not comments. Unlike doc comments, which can drift or lie, **assertions and defaults are always enforced** at runtime. Make your functions self-documenting by validating inputs and environment variables directly in code.
+**💡 Code is truth** — not comments. Unlike doc comments, which can drift or lie, **assertions and defaults are always enforced** at runtime. Make your
+functions self-documenting by validating inputs and environment variables directly in code.
 
 ```bash
+# Set defaults and assert required arguments at the top of your function.
+# This is clearer and more reliable than relying on comments alone.
+function deploy_service() {
 
-`# Set defaults and assert required arguments at the top of your function.`
+        local -i expected_args=2
 
-`# This is clearer and more reliable than relying on comments alone.`
+        if test $# -ne $expected_args; then
 
-`function deploy_service() {`
+                err "Expected $expected_args arguments, got $#"
 
-  `local -i expected_args=2`
+                exit 1
 
-  `if [ $# -ne $expected_args ]; then`
+        fi
 
-    `err "Expected $expected_args arguments, got $#"`
+        local version="${1:-v2}"
 
-    `exit 1`
+        local service_name="${2:?💥 'service_name' is required. No fallback makes sense here. Print a usage message instead.}"
 
-  `fi`
-
-  `local version="${1:-v2}"`
-
-  `local service_name="${2:?💥 'service_name' is required. No fallback makes sense here. Print a usage message instead.}"`
-
-  `foobarbaz "${service_name:?💥}" "${version:?💥}"`
-
-`}`
-
+        foobarbaz "${service_name:?💥}" "${version:?💥}"
+}
 ```
 
 [https://google.github.io/styleguide/shellguide.html#function-comments](https://google.github.io/styleguide/shellguide.html#function-comments)
@@ -224,7 +224,9 @@ All error messages should go to `STDERR`. This makes it easier to separate norma
 
 ### 💡 Indentation and Line Length
 
-**💡 Use 2 spaces for indentation — never tabs.** This ensures code looks consistent and predictable across all editors. If someone uses 8-space tabs and you open their script in a 2-space environment, it’ll appear barely indented. Likewise, your neatly indented code might look sparse in theirs. Standardizing on spaces (specifically 2) ensures structure is preserved, regardless of editor settings.
+**💡 Use 8 spaces for indentation — never tabs.** This ensures code looks consistent and predictable across all editors. If someone uses 8-space tabs and you
+open their script in a 2-space environment, it’ll appear barely indented. Likewise, your neatly indented code might look sparse in theirs. Standardizing on
+spaces (specifically 2) ensures structure is preserved, regardless of editor settings.
 
 💡 This is **especially important in indentation-sensitive scripting languages** like Bash, where misaligned blocks can introduce subtle, hard-to-detect logic errors.
 
@@ -244,7 +246,9 @@ All error messages should go to `STDERR`. This makes it easier to separate norma
 * Use an inline assertion like `${foo:?💥}` to fail fast. Include a 🔥 or 💥 emoji to make errors pop in CI logs.  
 * Use a fallback like `${foo:-'ARBITRARY'}` to signal that an empty or default value is acceptable.
 
-💡 Sprinkling inline assertions (especially in GitHub Actions where env variables are overused) creates airtight null checks, forcing you to decide between failing loudly or handling defaults gracefully. As a result, unguarded expansions like `$foo` or `${foo}` become a clear code smell — they convey neither intent nor safety.
+💡 Sprinkling inline assertions (especially in GitHub Actions where env variables are overused) creates airtight null checks, forcing you to decide between
+failing loudly or handling defaults gracefully. As a result, unguarded expansions like `$foo` or `${foo}` become a clear code smell — they convey neither intent
+nor safety.
 
 [https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#the-first-thing-to-know-about-bash-coding](https://github.com/anordal/shellharden/blob/master/how_to_do_things_safely_in_bash.md#the-first-thing-to-know-about-bash-coding)  
 [https://google.github.io/styleguide/shellguide.html#s5.6-variable-expansion](https://google.github.io/styleguide/shellguide.html#s5.6-variable-expansion)  
@@ -276,7 +280,7 @@ Double-bracket conditions have more features. But they have good POSIX substitut
 Always prefer the `=` operator over flags like `test -z`.
 
 ```bash
-if [ “${foo:-’’}” = “” ]; then
+if test “${foo:-’’}” = “”; then
   do_something
 fi
 
@@ -322,7 +326,10 @@ removed ./somefile'
 
 ### 💡 Eval
 
-Google prohibits this but as long as you follow this style guide, it shouldn’t be an issue. For most cases, there’s always a simpler and usually more verbose alternative to `eval`. One special case where eval is highly valuable is setting up a bash environment such as the `shopt` and helper functions that help enforce this style guide. In Github Actions, you set a multiline env variable containing a bash script and then all run blocks simply have to do `eval “$__bash_setup__”`. 
+Google prohibits this but as long as you follow this style guide, it shouldn’t be an issue. For most cases, there’s always a simpler and usually more verbose
+alternative to `eval`. One special case where eval is highly valuable is setting up a bash environment such as the `shopt` and helper functions that help
+enforce this style guide. In Github Actions, you set a multiline env variable containing a bash script and then all run blocks simply have to do `eval
+“$__bash_setup__”`. 
 
 [https://google.github.io/styleguide/shellguide.html#s6.6-eval](https://google.github.io/styleguide/shellguide.html#s6.6-eval)
 
@@ -335,7 +342,8 @@ You are encouraged to use arrays.
 
 ### Pipes to While
 
-Use process substitution or the `readarray` builtin (bash4+) in preference to piping to `while`. Pipes create a subshell, so any variables modified within a pipeline do not propagate to the parent shell.
+Use process substitution or the `readarray` builtin (bash4+) in preference to piping to `while`. Pipes create a subshell, so any variables modified within a
+pipeline do not propagate to the parent shell.
 
 [https://google.github.io/styleguide/shellguide.html#pipes-to-while](https://google.github.io/styleguide/shellguide.html#pipes-to-while)
 
@@ -383,7 +391,8 @@ Declare function-specific variables with `local`. This avoids polluting the glob
 
 Given the choice between invoking a shell builtin and invoking a separate process, choose the builtin.
 
-Prefer the use of builtins such as the [*Parameter Expansion*](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html) functionality provided by `bash` as it’s more efficient, robust, and portable (especially when compared to things like `sed`).
+Prefer the use of builtins such as the [*Parameter Expansion*](https://www.gnu.org/software/bash/manual/html_node/Shell-Parameter-Expansion.html) functionality
+provided by `bash` as it’s more efficient, robust, and portable (especially when compared to things like `sed`).
 
 ```bash
 
@@ -475,48 +484,48 @@ This pattern enables defining and injecting reusable Bash functions into multipl
 * Avoids managing external helper files
 
 ```yaml  
-env:  
-  __bash_setup__: |  
-    set +e  
-    set -uo pipefail  
-    shopt -s nullglob globstar extglob  
-      
-    function println() {  
-      if [ "$#" -gt 0 ]; then  
-        printf "$@"  
-      fi  
-      printf '\n'  
-    }
+env:        
+        __bash_setup__: |        
+                set +eu
+                set o pipefail        
+                shopt -s nullglob globstar extglob        
+                        
+                function println() {        
+                        if test "$#" -gt 0; then        
+                                printf "$@"        
+                        fi        
+                        printf '\n'        
+                }
 
-    function warn() {  
-      println "⚠️ warn: $@" >&2  
-      return 0  
-    }  
-      
-    function err() {  
-      println "❌ error: $@" >&2  
-      return 1  
-    }
+                function warn() {        
+                        println "⚠️ warn: $@" >&2        
+                        return 0        
+                }        
+                        
+                function err() {        
+                        println "❌ error: $@" >&2        
+                        return 1        
+                }
 
-    function ignore_failure() {  
-      "$@" || warn "⚠️ ignored failure: $*\n"  
-      return 0  
-    }
+                function ignore_failure() {        
+                        "$@" || warn "⚠️ ignored failure: $*\n"        
+                        return 0        
+                }
 
 # ...
 
-      - name: Audit Dependencies  
-        run: |  
-          eval "$__bash_setup__"  
-          ignore_failure npm audit --audit-level=high --json > package_error.json
-          count=$(jq '[.metadata.vulnerabilities.high, .metadata.vulnerabilities.critical] | add' package_error.json)
-          if [ "${count:-0}" -gt 0 ]; then  
-              err "High or Critical vulnerabilities found: ${count:?💥}"  
-              cat package_error.json | tee package_error.log  
-              exit 1  
-          fi  
-          println "✅ No high or critical vulnerabilities found."  
-          exit 0
+- name: Audit Dependencies        
+        run: |        
+                eval "$__bash_setup__"        
+                ignore_failure npm audit --audit-level=high --json > package_error.json
+                count=$(jq '[.metadata.vulnerabilities.high, .metadata.vulnerabilities.critical] | add' package_error.json)
+                if test "${count:-0}" -gt 0; then        
+                                err "High or Critical vulnerabilities found: ${count:?💥}"        
+                                cat package_error.json | tee package_error.log        
+                                exit 1        
+                fi        
+                println "✅ No high or critical vulnerabilities found."        
+                exit 0
 
 ```
 
@@ -541,3 +550,4 @@ with:
 ```
 
 This approach helps catch missing configuration early and keeps failure signals consistent across contexts.
+
